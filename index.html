@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>鸣潮声骸副词条概率计算器 v2.5</title>
+    <style>
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background-color: #1e1e24;
+            color: #e2e8f0;
+            max-width: 650px;
+            margin: 40px auto;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        h2 {
+            text-align: center;
+            color: #38bdf8;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            font-size: 13px; 
+            color: #94a3b8; 
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        button {
+            flex: 1;
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-calc { background: #0284c7; }
+        .btn-calc:hover { background: #0369a1; }
+        .btn-info { background: #4b5563; }
+        .btn-info:hover { background: #374151; }
+        
+        .slot-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            background: #2d2d35;
+            padding: 12px;
+            border-radius: 8px;
+        }
+        label {
+            font-weight: bold;
+            color: #38bdf8;
+            width: 12%;
+        }
+        select {
+            background: #3f3f46;
+            color: white;
+            border: 1px solid #52525b;
+            padding: 8px 10px;
+            border-radius: 6px;
+            width: 40%;
+            font-size: 14px;
+        }
+        select:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .value-container {
+            width: 44%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+        .ge-symbol {
+            color: #facc15;
+            font-weight: bold;
+            margin-right: 8px;
+            font-size: 16px;
+            display: none;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 20px;
+            background: #14532d;
+            border: 1px solid #166534;
+            border-radius: 8px;
+            display: none;
+            line-height: 1.6;
+        }
+        .prob-display {
+            font-family: 'Courier New', Courier, monospace;
+            background: #0f2d1a;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 8px 0;
+            word-break: break-all;
+        }
+
+        /* 弹窗样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.75);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.2s, visibility 0.2s;
+        }
+        .modal-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .modal-content {
+            background: #22222a;
+            width: 90%;
+            max-width: 550px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.6);
+            border: 1px solid #3f3f46;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #3f3f46;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .modal-title-link {
+            text-decoration: none;
+            color: #facc15;
+            transition: color 0.2s, text-decoration 0.2s;
+        }
+        .modal-title-link:hover {
+            color: #fde047;
+            text-decoration: underline;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+        }
+        .modal-close:hover { color: white; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+        th, td {
+            border: 1px solid #3f3f46;
+            padding: 8px;
+            text-align: left;
+        }
+        th { background: #2d2d35; color: #38bdf8; }
+        .stat-section-title {
+            background: #1e1e24;
+            color: #facc15;
+            font-weight: bold;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>鸣潮声骸概率计算器 v2.5</h2>
+    <div class="subtitle">留空自动视作不限 | 动态排重过滤 | 弹窗标题支持跳转官方直达</div>
+    <hr style="border-color: #3f3f46; margin-bottom: 20px;">
+
+    <div id="slots-container"></div>
+
+    <div class="btn-group">
+        <button class="btn-info" onclick="toggleModal(true)">查看官方概率公示</button>
+        <button class="btn-calc" onclick="calculateProbability()">一键精准计算</button>
+    </div>
+
+    <div id="result"></div>
+
+    <!-- 概率公示弹窗 -->
+    <div id="probModal" class="modal-overlay" onclick="toggleModal(false)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 style="margin:0;">
+                    <a class="modal-title-link" href="https://wutheringwaves.kurogames.com/p/language_ko/product_info.html" target="_blank" title="点击在新标签页中打开官方概率页面">
+                        韩服官网声骸副词条概率公示 🔗
+                    </a>
+                </h3>
+                <button class="modal-close" onclick="toggleModal(false)">&times;</button>
+            </div>
+            <p style="font-size:12px; color:#94a3b8; margin-top:0;">* 注：13种副词条本身解锁概率完全均等，均为 1/13 (7.6923%)。以下为各词条内部的数值档位概率分布。</p>
+            <div id="modal-table-container"></div>
+        </div>
+    </div>
+
+    <script>
+        const subStatsData = {
+            "固定攻击": [
+                { name: "30", prob: 0.067961 }, { name: "40", prob: 0.524272 },
+                { name: "50", prob: 0.378641 }, { name: "60", prob: 0.029126 }
+            ],
+            "固定防御": [
+                { name: "40", prob: 0.145631 }, { name: "50", prob: 0.446602 },
+                { name: "60", prob: 0.320388 }, { name: "70", prob: 0.087379 }
+            ],
+            "固定生命": [
+                { name: "330", prob: 0.067961 }, { name: "360", prob: 0.077670 }, { name: "390", prob: 0.203883 },
+                { name: "430", prob: 0.242718 }, { name: "470", prob: 0.174757 }, { name: "510", prob: 0.145631 },
+                { name: "540", prob: 0.058252 }, { name: "580", prob: 0.029126 }
+            ],
+            "防御百分比": [
+                { name: "8.1%", prob: 0.067961 }, { name: "9.0%", prob: 0.077670 }, { name: "10.0%", prob: 0.203883 },
+                { name: "10.9%", prob: 0.242718 }, { name: "11.8%", prob: 0.174757 }, { name: "12.8%", prob: 0.145631 },
+                { name: "13.8%", prob: 0.058252 }, { name: "14.7%", prob: 0.029126 }
+            ],
+            "暴击率": [
+                { name: "6.3%", prob: 0.077778 }, { name: "6.9%", prob: 0.077778 }, { name: "7.5%", prob: 0.077778 },
+                { name: "8.1%", prob: 0.026667 }, { name: "8.7%", prob: 0.026667 }, { name: "9.3%", prob: 0.026667 },
+                { name: "9.9%", prob: 0.030000 }, { name: "10.5% (满档)", prob: 0.030000 }
+            ],
+            "暴击伤害": [
+                { name: "12.6%", prob: 0.077778 }, { name: "13.8%", prob: 0.077778 }, { name: "15.0%", prob: 0.077778 },
+                { name: "16.2%", prob: 0.026667 }, { name: "17.4%", prob: 0.026667 }, { name: "18.6%", prob: 0.026667 },
+                { name: "19.8%", prob: 0.030000 }, { name: "21.0% (满档)", prob: 0.030000 }
+            ],
+            "攻击力百分比": [
+                { name: "6.4%", prob: 0.067961 }, { name: "7.1%", prob: 0.077670 }, { name: "7.9%", prob: 0.203883 },
+                { name: "8.6%", prob: 0.242718 }, { name: "9.4%", prob: 0.174757 }, { name: "10.1%", prob: 0.145631 },
+                { name: "10.9%", prob: 0.058252 }, { name: "11.6% (满档)", prob: 0.029126 }
+            ],
+            "共鸣效率": [
+                { name: "6.8%", prob: 0.067961 }, { name: "7.6%", prob: 0.077670 }, { name: "8.4%", prob: 0.203883 },
+                { name: "9.2%", prob: 0.242718 }, { name: "10.0%", prob: 0.174757 }, { name: "10.8%", prob: 0.145631 },
+                { name: "11.6%", prob: 0.058252 }, { name: "12.4% (满档)", prob: 0.029126 }
+            ],
+            "共鸣技能伤害加成": [
+                { name: "6.4%", prob: 0.067961 }, { name: "7.1%", prob: 0.077670 }, { name: "7.9%", prob: 0.203883 },
+                { name: "8.6%", prob: 0.242718 }, { name: "9.4%", prob: 0.174757 }, { name: "10.1%", prob: 0.145631 },
+                { name: "10.9%", prob: 0.058252 }, { name: "11.6% (满档)", prob: 0.029126 }
+            ],
+            "普通攻击伤害加成": [
+                { name: "6.4%", prob: 0.067961 }, { name: "7.1%", prob: 0.077670 }, { name: "7.9%", prob: 0.203883 },
+                { name: "8.6%", prob: 0.242718 }, { name: "9.4%", prob: 0.174757 }, { name: "10.1%", prob: 0.145631 },
+                { name: "10.9%", prob: 0.058252 }, { name: "11.6% (满档)", prob: 0.029126 }
+            ],
+            "重击伤害加成": [
+                { name: "6.4%", prob: 0.067961 }, { name: "7.1%", prob: 0.077670 }, { name: "7.9%", prob: 0.203883 },
+                { name: "8.6%", prob: 0.242718 }, { name: "9.4%", prob: 0.174757 }, { name: "10.1%", prob: 0.145631 },
+                { name: "10.9%", prob: 0.058252 }, { name: "11.6% (满档)", prob: 0.029126 }
+            ],
+            "共鸣解放伤害加成": [
+                { name: "6.4%", prob: 0.067961 }, { name: "7.1%", prob: 0.077670 }, { name: "7.9%", prob: 0.203883 },
+                { name: "8.6%", prob: 0.242718 }, { name: "9.4%", prob: 0.174757 }, { name: "10.1%", prob: 0.145631 },
+                { name: "10.9%", prob: 0.058252 }, { name: "11.6% (满档)", prob: 0.029126 }
+            ],
+            "生命百分比": [
+                { name: "6.4%", prob: 0.067961 }, { name: "7.1%", prob: 0.077670 }, { name: "7.9%", prob: 0.203883 },
+                { name: "8.6%", prob: 0.242718 }, { name: "9.4%", prob: 0.174757 }, { name: "10.1%", prob: 0.145631 },
+                { name: "10.9%", prob: 0.058252 }, { name: "11.6% (满档)", prob: 0.029126 }
+            ]
+        };
+
+        const TOTAL_STATS = 13;
+
+        // 1. 初始化页面输入框
+        const container = document.getElementById('slots-container');
+        for (let i = 1; i <= 5; i++) {
+            const row = document.createElement('div');
+            row.className = 'slot-row';
+            row.innerHTML = `
+                <label>栏位 ${i}</label>
+                <select id="type-${i}" onchange="onTypeChange()">
+                    <option value="">-- 请选择类型 (不限) --</option>
+                    ${Object.keys(subStatsData).map(key => `<option value="${key}">${key}</option>`).join('')}
+                </select>
+                <div class="value-container">
+                    <span id="ge-${i}" class="ge-symbol">≥</span>
+                    <select id="value-${i}" disabled style="width: 100%;">
+                        <option value="">-- 请选择数值 (不限) --</option>
+                    </select>
+                </div>
+            `;
+            container.appendChild(row);
+        }
+
+        // 2. 初始化生成弹窗内部的表格
+        const tableContainer = document.getElementById('modal-table-container');
+        let tableHTML = `<table>
+            <thead>
+                <tr>
+                    <th>数值档位</th>
+                    <th>单档独立概率</th>
+                    <th>满足“大于等于”的总概率</th>
+                </tr>
+            </thead>
+            <tbody>`;
+
+        Object.keys(subStatsData).forEach(statName => {
+            tableHTML += `<tr><td colspan="3" class="stat-section-title">${statName}</td></tr>`;
+            let arr = subStatsData[statName];
+            for (let i = 0; i < arr.length; i++) {
+                let sumGe = 0;
+                for (let j = i; j < arr.length; j++) sumGe += arr[j].prob;
+                
+                tableHTML += `<tr>
+                    <td>≥ ${arr[i].name}</td>
+                    <td>${(arr[i].prob * 100).toFixed(4)}%</td>
+                    <td style="color:#facc15;">${(sumGe * 100).toFixed(4)}%</td>
+                </tr>`;
+            }
+        });
+        tableHTML += `</tbody></table>`;
+        tableContainer.innerHTML = tableHTML;
+
+        // 控制弹窗开关
+        function toggleModal(show) {
+            const modal = document.getElementById('probModal');
+            if (show) modal.classList.add('active');
+            else modal.classList.remove('active');
+        }
+
+        function onTypeChange() {
+            let selectedTypes = [];
+            for (let i = 1; i <= 5; i++) {
+                const val = document.getElementById(`type-${i}`).value;
+                if (val) selectedTypes.push(val);
+            }
+
+            for (let i = 1; i <= 5; i++) {
+                const typeSelect = document.getElementById(`type-${i}`);
+                const currentVal = typeSelect.value;
+
+                Array.from(typeSelect.options).forEach(option => {
+                    if (option.value === "") return;
+                    if (selectedTypes.includes(option.value) && option.value !== currentVal) {
+                        option.style.display = 'none';
+                    } else {
+                        option.style.display = 'block';
+                    }
+                });
+
+                updateValueOptions(i, currentVal);
+            }
+        }
+
+        function updateValueOptions(slotIndex, selectedType) {
+            const valueSelect = document.getElementById(`value-${slotIndex}`);
+            const geSymbol = document.getElementById(`ge-${slotIndex}`);
+            const previousIdx = valueSelect.value;
+
+            valueSelect.innerHTML = '<option value="">-- 请选择数值 (不限) --</option>';
+            
+            if (selectedType && subStatsData[selectedType]) {
+                valueSelect.disabled = false;
+                geSymbol.style.display = 'inline';
+                valueSelect.style.width = '85%';
+                
+                subStatsData[selectedType].forEach((item, idx) => {
+                    valueSelect.innerHTML += `<option value="${idx}">${item.name}</option>`;
+                });
+                if(previousIdx !== "" && previousIdx < subStatsData[selectedType].length) {
+                    valueSelect.value = previousIdx;
+                }
+            } else {
+                valueSelect.disabled = true;
+                geSymbol.style.display = 'none';
+                valueSelect.style.width = '100%';
+            }
+        }
+
+        function comb(n, m) {
+            if (m < 0 || m > n) return 0;
+            if (m === 0 || m === n) return 1;
+            let num = 1, den = 1;
+            for (let i = 1; i <= m; i++) {
+                num *= (n - i + 1);
+                den *= i;
+            }
+            return num;
+        }
+
+        function calculateProbability() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'none';
+
+            let selectedTypes = [];
+            let valueMultipliers = 1;
+
+            for (let i = 1; i <= 5; i++) {
+                const type = document.getElementById(`type-${i}`).value;
+                const valueIdxStr = document.getElementById(`value-${i}`).value;
+
+                if (type) {
+                    selectedTypes.push(type);
+
+                    if (valueIdxStr !== "") {
+                        const startIdx = parseInt(valueIdxStr);
+                        let sumProb = 0;
+                        for (let j = startIdx; j < subStatsData[type].length; j++) {
+                            sumProb += subStatsData[type][j].prob;
+                        }
+                        valueMultipliers *= sumProb;
+                    }
+                }
+            }
+
+            const k = selectedTypes.length; 
+            const totalCombos = comb(TOTAL_STATS, 5); 
+            const validCombos = comb(TOTAL_STATS - k, 5 - k); 
+            const comboProbability = validCombos / totalCombos;
+
+            const finalProbability = comboProbability * valueMultipliers;
+
+            let pctText = "";
+            if (finalProbability < 0.000001) {
+                pctText = (finalProbability * 100).toExponential(6) + "%";
+            } else {
+                pctText = (finalProbability * 100).toFixed(6).replace(/\.?0+$/, "") + "%";
+            }
+
+            const fractionDenominator = BigInt(Math.round(1 / finalProbability));
+
+            resultDiv.innerHTML = `
+                <strong>🎉 计算成功！</strong><br><br>
+                🎯 满足或超越该条件的绝对概率为：
+                <div class="prob-display" style="color: #4ade80; font-size: 16px;">
+                    常规形式: ${pctText}<br>
+                    科学计数: ${finalProbability.toExponential(6)}
+                </div>
+                🔢 转换成分数形式：
+                <div class="prob-display" style="color: #facc15; font-size: 15px;">
+                    1 / ${fractionDenominator.toLocaleString()}
+                </div>
+                📊 刷取期望：<br>
+                平均强化约 <strong style="color: #38bdf8;">${fractionDenominator.toLocaleString()}</strong> 个声骸会产生一个符合（或超越）此要求的极品。
+            `;
+            resultDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
