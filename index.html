@@ -3,457 +3,599 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>鸣潮声骸副词条概率计算器 v2.5</title>
+    <title>鸣潮声骸副词条概率计算器 v1.7</title>
     <style>
         body {
             font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
             background-color: #1e1e24;
             color: #e2e8f0;
-            max-width: 650px;
+            max-width: 780px;
             margin: 40px auto;
             padding: 20px;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
         }
-        h2 {
-            text-align: center;
-            color: #38bdf8;
-            margin-bottom: 5px;
-        }
-        .subtitle {
-            font-size: 13px; 
-            color: #94a3b8; 
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 25px;
-        }
-        button {
-            flex: 1;
-            color: white;
-            border: none;
-            padding: 14px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .btn-calc { background: #0284c7; }
-        .btn-calc:hover { background: #0369a1; }
-        .btn-info { background: #4b5563; }
-        .btn-info:hover { background: #374151; }
         
-        .slot-row {
+        .top-bar {
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #3f3f46;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+        .main-title-container { flex: 1; }
+        h2 { margin: 0; color: #38bdf8; font-size: 24px; line-height: 1.3; }
+        
+        .lang-switcher-container { flex-shrink: 0; }
+        .lang-select {
+            background: #2d2d35;
+            color: #38bdf8;
+            border: 1px solid #3f3f46;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .lang-select:hover { border-color: #0284c7; }
+
+        .tabs { display: flex; justify-content: center; margin-bottom: 20px; gap: 10px; }
+        .tab-btn {
+            background: #2d2d35; color: #94a3b8; border: 1px solid #3f3f46;
+            padding: 10px 20px; font-size: 15px; font-weight: bold; border-radius: 6px;
+            cursor: pointer; flex: 1; transition: all 0.2s;
+        }
+        .tab-btn.active { background: #0284c7; color: white; border-color: #0284c7; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .table-header {
+            display: flex;
+            align-items: center;
+            padding: 0 12px 6px 12px;
+            color: #94a3b8;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        .slot-row-unified {
+            display: flex;
             align-items: center;
             margin-bottom: 12px;
             background: #2d2d35;
             padding: 12px;
             border-radius: 8px;
         }
-        label {
-            font-weight: bold;
-            color: #38bdf8;
-            width: 12%;
-        }
+
+        .col-lock { width: 50px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; }
+        .col-label { width: 80px; font-weight: bold; display: flex; justify-content: center; align-items: center; flex-shrink: 0; box-sizing: border-box; }
+        
+        .col-normal-type { flex: 1; margin-left: 6px; margin-right: 6px; }
+        .col-normal-val { flex: 1; margin-left: 6px; margin-right: 6px; }
+        .col-reroll-type { flex: 1.2; margin-left: 6px; margin-right: 6px; }
+        .col-reroll-val { flex: 1.2; margin-left: 6px; margin-right: 6px; }
+        .col-reroll-want { flex: 1.6; display: flex; flex-direction: column; gap: 4px; margin-left: 6px; margin-right: 6px; }
+
+        .header-text { width: 100%; text-align: center; }
+
         select {
-            background: #3f3f46;
-            color: white;
-            border: 1px solid #52525b;
-            padding: 8px 10px;
-            border-radius: 6px;
-            width: 40%;
-            font-size: 14px;
+            background: #3f3f46; color: white; border: 1px solid #52525b;
+            padding: 8px 6px; border-radius: 6px; font-size: 13px; width: 100%;
+            box-sizing: border-box;
         }
-        select:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
+        select:disabled, input:disabled { opacity: 0.3; cursor: not-allowed; }
+        input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; margin: 0; }
+        
+        .btn-group { display: flex; gap: 10px; margin-top: 25px; }
+        button.action-btn {
+            flex: 1; color: white; border: none; padding: 14px;
+            font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer;
+            transition: background 0.2s;
         }
-        .value-container {
-            width: 44%;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
+        .btn-calc { background: #0284c7; } .btn-calc:hover { background: #0369a1; }
+        .btn-sim { background: #b45309; } .btn-sim:hover { background: #92400e; }
+        .btn-info { background: #4b5563; max-width: 180px; } .btn-info:hover { background: #374151; }
+        
+        .result-panel {
+            margin-top: 20px; padding: 20px; background: #14532d;
+            border: 1px solid #166534; border-radius: 8px; display: none; line-height: 1.6;
         }
-        .ge-symbol {
-            color: #facc15;
-            font-weight: bold;
-            margin-right: 8px;
-            font-size: 16px;
-            display: none;
-        }
-        #result {
-            margin-top: 20px;
-            padding: 20px;
-            background: #14532d;
-            border: 1px solid #166534;
-            border-radius: 8px;
-            display: none;
-            line-height: 1.6;
-        }
+        .result-panel.sim-style { background: #1e3a8a; border-color: #1e40af; }
         .prob-display {
-            font-family: 'Courier New', Courier, monospace;
-            background: #0f2d1a;
-            padding: 10px;
-            border-radius: 6px;
-            margin: 8px 0;
-            word-break: break-all;
+            font-family: 'Courier New', Courier, monospace; background: rgba(0,0,0,0.3);
+            padding: 10px; border-radius: 6px; margin: 8px 0; word-break: break-all;
         }
 
-        /* 弹窗样式 */
         .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.75);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            visibility: hidden;
-            opacity: 0;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.75); display: flex; justify-content: center;
+            align-items: center; z-index: 1000; visibility: hidden; opacity: 0;
             transition: opacity 0.2s, visibility 0.2s;
         }
-        .modal-overlay.active {
-            visibility: visible;
-            opacity: 1;
-        }
+        .modal-overlay.active { visibility: visible; opacity: 1; }
         .modal-content {
-            background: #22222a;
-            width: 90%;
-            max-width: 550px;
-            max-height: 80vh;
-            overflow-y: auto;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 25px rgba(0,0,0,0.6);
-            border: 1px solid #3f3f46;
+            background: #22222a; width: 90%; max-width: 550px; max-height: 80vh;
+            overflow-y: auto; border-radius: 12px; padding: 20px; border: 1px solid #3f3f46;
         }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #3f3f46;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-        }
-        .modal-title-link {
-            text-decoration: none;
-            color: #facc15;
-            transition: color 0.2s, text-decoration 0.2s;
-        }
-        .modal-title-link:hover {
-            color: #fde047;
-            text-decoration: underline;
-        }
-        .modal-close {
-            background: none;
-            border: none;
-            color: #94a3b8;
-            font-size: 24px;
-            cursor: pointer;
-            padding: 0;
-        }
-        .modal-close:hover { color: white; }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-            font-size: 13px;
-        }
-        th, td {
-            border: 1px solid #3f3f46;
-            padding: 8px;
-            text-align: left;
-        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3f3f46; padding-bottom: 10px; margin-bottom: 15px; }
+        .modal-title-link { text-decoration: none; color: #facc15; font-weight: bold; }
+        .modal-title-link:hover { text-decoration: underline; }
+        .modal-close { background: none; border: none; color: #94a3b8; font-size: 24px; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; }
+        th, td { border: 1px solid #3f3f46; padding: 8px; text-align: left; }
         th { background: #2d2d35; color: #38bdf8; }
-        .stat-section-title {
-            background: #1e1e24;
-            color: #facc15;
-            font-weight: bold;
-            font-size: 14px;
-        }
+        .stat-section-title { background: #1e1e24; color: #facc15; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <h2>鸣潮声骸概率计算器 v2.5</h2>
-    <div class="subtitle">留空自动视作不限 | 动态排重过滤 | 弹窗标题支持跳转官方直达</div>
-    <hr style="border-color: #3f3f46; margin-bottom: 20px;">
-
-    <div id="slots-container"></div>
-
-    <div class="btn-group">
-        <button class="btn-info" onclick="toggleModal(true)">查看官方概率公示</button>
-        <button class="btn-calc" onclick="calculateProbability()">一键精准计算</button>
+    <div class="top-bar">
+        <div class="main-title-container">
+            <h2 id="main-title">鸣潮声骸副词条概率计算器 v1.0</h2>
+        </div>
+        <div class="lang-switcher-container">
+            <select id="langSelect" class="lang-select" onchange="changeLanguage(this.value)">
+                <option value="zh">简体中文</option>
+                <option value="en">English</option>
+            </select>
+        </div>
     </div>
 
-    <div id="result"></div>
+    <div class="tabs">
+        <button id="tab-btn-normal" class="tab-btn active" onclick="switchTab('normal')">副词条概率计算</button>
+        <button id="tab-btn-reroll" class="tab-btn" onclick="switchTab('reroll')">频整器概率计算</button>
+    </div>
 
-    <!-- 概率公示弹窗 -->
+    <div id="tab-normal" class="tab-content active">
+        <div class="table-header">
+            <div class="col-label" id="th-normal-slot">栏位</div>
+            <div class="col-normal-type" id="th-normal-type">期望词条类型</div>
+            <div class="col-normal-val" id="th-normal-val">期望数值下限</div>
+        </div>
+        <div id="normal-slots"></div>
+        <div class="btn-group">
+            <button class="btn-info" id="btn-show-modal" onclick="toggleModal(true)">查看官方概率公示</button>
+            <button class="action-btn btn-calc" id="btn-calc-normal" onclick="calculateNormal()">一键精准计算</button>
+        </div>
+        <div id="normal-result" class="result-panel"></div>
+    </div>
+
+    <div id="tab-reroll" class="tab-content">
+        <div class="table-header">
+            <div class="col-lock" id="th-reroll-lock">锁定</div>
+            <div class="col-label" id="th-reroll-slot">栏位</div>
+            <div class="col-reroll-type" id="th-reroll-type">当前词条类型</div>
+            <div class="col-reroll-val" id="th-reroll-val">当前数值</div>
+            <div class="col-reroll-want" id="th-reroll-want">重构期望类型及数值</div>
+        </div>
+        <div id="reroll-slots"></div>
+        <div class="btn-group">
+            <button class="action-btn btn-sim" id="btn-sim-reroll">🎲 随机洗一次</button>
+            <button class="action-btn btn-calc" id="btn-calc-reroll" onclick="calculateRerollProbability()">📊 计算达成期望概率</button>
+        </div>
+        <div id="reroll-result" class="result-panel"></div>
+    </div>
+
     <div id="probModal" class="modal-overlay" onclick="toggleModal(false)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">
-                <h3 style="margin:0;">
-                    <a class="modal-title-link" href="https://wutheringwaves.kurogames.com/p/language_ko/product_info.html" target="_blank" title="点击在新标签页中打开官方概率页面">
-                        韩服官网声骸副词条概率公示 🔗
-                    </a>
-                </h3>
+                <h3><a class="modal-title-link" id="modal-link-text" href="https://wutheringwaves.kurogames.com/p/language_ko/product_info.html" target="_blank">韩服官网声骸副词条概率公示 🔗</a></h3>
                 <button class="modal-close" onclick="toggleModal(false)">&times;</button>
             </div>
-            <p style="font-size:12px; color:#94a3b8; margin-top:0;">* 注：13种副词条本身解锁概率完全均等，均为 1/13 (7.6923%)。以下为各词条内部的数值档位概率分布。</p>
             <div id="modal-table-container"></div>
         </div>
     </div>
 
     <script>
         const subStatsData = {
-            "固定攻击": [
-                { name: "30", prob: 0.067961 }, { name: "40", prob: 0.524272 },
-                { name: "50", prob: 0.378641 }, { name: "60", prob: 0.029126 }
-            ],
-            "固定防御": [
-                { name: "40", prob: 0.145631 }, { name: "50", prob: 0.446602 },
-                { name: "60", prob: 0.320388 }, { name: "70", prob: 0.087379 }
-            ],
-            "固定生命": [
-                { name: "330", prob: 0.067961 }, { name: "360", prob: 0.077670 }, { name: "390", prob: 0.203883 },
-                { name: "430", prob: 0.242718 }, { name: "470", prob: 0.174757 }, { name: "510", prob: 0.145631 },
-                { name: "540", prob: 0.058252 }, { name: "580", prob: 0.029126 }
-            ],
-            "防御百分比": [
-                { name: "8.1%", prob: 0.067961 }, { name: "9.0%", prob: 0.077670 }, { name: "10.0%", prob: 0.203883 },
-                { name: "10.9%", prob: 0.242718 }, { name: "11.8%", prob: 0.174757 }, { name: "12.8%", prob: 0.145631 },
-                { name: "13.8%", prob: 0.058252 }, { name: "14.7%", prob: 0.029126 }
-            ],
-            "暴击率": [
-                { name: "6.3%", prob: 0.077778 }, { name: "6.9%", prob: 0.077778 }, { name: "7.5%", prob: 0.077778 },
-                { name: "8.1%", prob: 0.026667 }, { name: "8.7%", prob: 0.026667 }, { name: "9.3%", prob: 0.026667 },
-                { name: "9.9%", prob: 0.030000 }, { name: "10.5% (满档)", prob: 0.030000 }
-            ],
-            "暴击伤害": [
-                { name: "12.6%", prob: 0.077778 }, { name: "13.8%", prob: 0.077778 }, { name: "15.0%", prob: 0.077778 },
-                { name: "16.2%", prob: 0.026667 }, { name: "17.4%", prob: 0.026667 }, { name: "18.6%", prob: 0.026667 },
-                { name: "19.8%", prob: 0.030000 }, { name: "21.0% (满档)", prob: 0.030000 }
-            ],
-            "攻击力百分比": [
-                { name: "6.4%", prob: 0.067961 }, { name: "7.1%", prob: 0.077670 }, { name: "7.9%", prob: 0.203883 },
-                { name: "8.6%", prob: 0.242718 }, { name: "9.4%", prob: 0.174757 }, { name: "10.1%", prob: 0.145631 },
-                { name: "10.9%", prob: 0.058252 }, { name: "11.6% (满档)", prob: 0.029126 }
-            ],
-            "共鸣效率": [
-                { name: "6.8%", prob: 0.067961 }, { name: "7.6%", prob: 0.077670 }, { name: "8.4%", prob: 0.203883 },
-                { name: "9.2%", prob: 0.242718 }, { name: "10.0%", prob: 0.174757 }, { name: "10.8%", prob: 0.145631 },
-                { name: "11.6%", prob: 0.058252 }, { name: "12.4% (满档)", prob: 0.029126 }
-            ],
-            "共鸣技能伤害加成": [
-                { name: "6.4%", prob: 0.067961 }, { name: "7.1%", prob: 0.077670 }, { name: "7.9%", prob: 0.203883 },
-                { name: "8.6%", prob: 0.242718 }, { name: "9.4%", prob: 0.174757 }, { name: "10.1%", prob: 0.145631 },
-                { name: "10.9%", prob: 0.058252 }, { name: "11.6% (满档)", prob: 0.029126 }
-            ],
-            "普通攻击伤害加成": [
-                { name: "6.4%", prob: 0.067961 }, { name: "7.1%", prob: 0.077670 }, { name: "7.9%", prob: 0.203883 },
-                { name: "8.6%", prob: 0.242718 }, { name: "9.4%", prob: 0.174757 }, { name: "10.1%", prob: 0.145631 },
-                { name: "10.9%", prob: 0.058252 }, { name: "11.6% (满档)", prob: 0.029126 }
-            ],
-            "重击伤害加成": [
-                { name: "6.4%", prob: 0.067961 }, { name: "7.1%", prob: 0.077670 }, { name: "7.9%", prob: 0.203883 },
-                { name: "8.6%", prob: 0.242718 }, { name: "9.4%", prob: 0.174757 }, { name: "10.1%", prob: 0.145631 },
-                { name: "10.9%", prob: 0.058252 }, { name: "11.6% (满档)", prob: 0.029126 }
-            ],
-            "共鸣解放伤害加成": [
-                { name: "6.4%", prob: 0.067961 }, { name: "7.1%", prob: 0.077670 }, { name: "7.9%", prob: 0.203883 },
-                { name: "8.6%", prob: 0.242718 }, { name: "9.4%", prob: 0.174757 }, { name: "10.1%", prob: 0.145631 },
-                { name: "10.9%", prob: 0.058252 }, { name: "11.6% (满档)", prob: 0.029126 }
-            ],
-            "生命百分比": [
-                { name: "6.4%", prob: 0.067961 }, { name: "7.1%", prob: 0.077670 }, { name: "7.9%", prob: 0.203883 },
-                { name: "8.6%", prob: 0.242718 }, { name: "9.4%", prob: 0.174757 }, { name: "10.1%", prob: 0.145631 },
-                { name: "10.9%", prob: 0.058252 }, { name: "11.6% (满档)", prob: 0.029126 }
-            ]
+            "固定攻击": [{ name: "30", prob: 0.067961 }, { name: "40", prob: 0.524272 }, { name: "50", prob: 0.378641 }, { name: "60", prob: 0.029126 }],
+            "固定防御": [{ name: "40", prob: 0.145631 }, { name: "50", prob: 0.446602 }, { name: "60", prob: 0.320388 }, { name: "70", prob: 0.087379 }],
+            "固定生命": [{ name: "330", prob: 0.067961 }, { name: "360", prob: 0.077670 }, { name: "390", prob: 0.203883 }, { name: "430", prob: 0.242718 }, { name: "470", prob: 0.174757 }, { name: "510", prob: 0.145631 }, { name: "540", prob: 0.058252 }, { name: "580", prob: 0.029126 }],
+            "防御百分比": [{ name: "8.1%", prob: 0.067961 }, { name: "9.0%", prob: 0.077670 }, { name: "10.0%", prob: 0.203883 }, { name: "10.9%", prob: 0.242718 }, { name: "11.8%", prob: 0.174757 }, { name: "12.8%", prob: 0.145631 }, { name: "13.8%", prob: 0.058252 }, { name: "14.7%", prob: 0.029126 }],
+            "暴击率": [{ name: "6.3%", prob: 0.077778 }, { name: "6.9%", prob: 0.077778 }, { name: "7.5%", prob: 0.077778 }, { name: "8.1%", prob: 0.026667 }, { name: "8.7%", prob: 0.026667 }, { name: "9.3%", prob: 0.026667 }, { name: "9.9%", prob: 0.030000 }, { name: "10.5% (满档)", prob: 0.030000 }],
+            "暴击伤害": [{ name: "12.6%", prob: 0.077778 }, { name: "13.8%", prob: 0.077778 }, { name: "15.0%", prob: 0.077778 }, { name: "16.2%", prob: 0.026667 }, { name: "17.4%", prob: 0.026667 }, { name: "18.6%", prob: 0.026667 }, { name: "19.8%", prob: 0.030000 }, { name: "21.0% (满档)", prob: 0.030000 }],
+            "攻击力百分比": [{ name: "6.4%", prob: 0.067961 }, { name: "7.1%", prob: 0.077670 }, { name: "7.9%", prob: 0.203883 }, { name: "8.6%", prob: 0.242718 }, { name: "9.4%", prob: 0.174757 }, { name: "10.1%", prob: 0.145631 }, { name: "10.9%", prob: 0.058252 }, { name: "11.6% (满档)", prob: 0.029126 }],
+            "共鸣效率": [{ name: "6.8%", prob: 0.067961 }, { name: "7.6%", prob: 0.077670 }, { name: "8.4%", prob: 0.203883 }, { name: "9.2%", prob: 0.242718 }, { name: "10.0%", prob: 0.174757 }, { name: "10.8%", prob: 0.145631 }, { name: "11.6%", prob: 0.058252 }, { name: "12.4% (满档)", prob: 0.029126 }],
+            "共鸣技能伤害加成": [{ name: "6.4%", prob: 0.067961 }, { name: "7.1%", prob: 0.077670 }, { name: "7.9%", prob: 0.203883 }, { name: "8.6%", prob: 0.242718 }, { name: "9.4%", prob: 0.174757 }, { name: "10.1%", prob: 0.145631 }, { name: "10.9%", prob: 0.058252 }, { name: "11.6% (满档)", prob: 0.029126 }],
+            "普通攻击伤害加成": [{ name: "6.4%", prob: 0.067961 }, { name: "7.1%", prob: 0.077670 }, { name: "7.9%", prob: 0.203883 }, { name: "8.6%", prob: 0.242718 }, { name: "9.4%", prob: 0.174757 }, { name: "10.1%", prob: 0.145631 }, { name: "10.9%", prob: 0.058252 }, { name: "11.6% (满档)", prob: 0.029126 }],
+            "重击伤害加成": [{ name: "6.4%", prob: 0.067961 }, { name: "7.1%", prob: 0.077670 }, { name: "7.9%", prob: 0.203883 }, { name: "8.6%", prob: 0.242718 }, { name: "9.4%", prob: 0.174757 }, { name: "10.1%", prob: 0.145631 }, { name: "10.9%", prob: 0.058252 }, { name: "11.6% (满档)", prob: 0.029126 }],
+            "共鸣解放伤害加成": [{ name: "6.4%", prob: 0.067961 }, { name: "7.1%", prob: 0.077670 }, { name: "7.9%", prob: 0.203883 }, { name: "8.6%", prob: 0.242718 }, { name: "9.4%", prob: 0.174757 }, { name: "10.1%", prob: 0.145631 }, { name: "10.9%", prob: 0.058252 }, { name: "11.6% (满档)", prob: 0.029126 }],
+            "生命百分比": [{ name: "6.4%", prob: 0.067961 }, { name: "7.1%", prob: 0.077670 }, { name: "7.9%", prob: 0.203883 }, { name: "8.6%", prob: 0.242718 }, { name: "9.4%", prob: 0.174757 }, { name: "10.1%", prob: 0.145631 }, { name: "10.9%", prob: 0.058252 }, { name: "11.6% (满档)", prob: 0.029126 }]
         };
-
         const TOTAL_STATS = 13;
 
-        // 1. 初始化页面输入框
-        const container = document.getElementById('slots-container');
+        const statTranslations = {
+            "固定攻击": { zh: "固定攻击", en: "Flat ATK" },
+            "固定防御": { zh: "固定防御", en: "Flat DEF" },
+            "固定生命": { zh: "固定生命", en: "Flat HP" },
+            "防御百分比": { zh: "防御百分比", en: "DEF %" },
+            "暴击率": { zh: "暴击率", en: "Crit. Rate" },
+            "暴击伤害": { zh: "暴击伤害", en: "Crit. DMG" },
+            "攻击力百分比": { zh: "攻击力百分比", en: "ATK %" },
+            "共鸣效率": { zh: "共鸣效率", en: "Energy Regen" },
+            "共鸣技能伤害加成": { zh: "共鸣技能伤害加成", en: "Resonance Skill DMG Bonus" },
+            "普通攻击伤害加成": { zh: "普通攻击伤害加成", en: "Basic Attack DMG Bonus" },
+            "重击伤害加成": { zh: "重击伤害加成", en: "Heavy Attack DMG Bonus" },
+            "共鸣解放伤害加成": { zh: "共鸣解放伤害加成", en: "Resonance Liberation DMG Bonus" },
+            "生命百分比": { zh: "生命百分比", en: "HP %" }
+        };
+
+        const i18n = {
+            zh: {
+                title: "鸣潮声骸副词条概率计算器 v1.0",
+                tabNormal: "副词条概率计算", tabReroll: "频整器概率计算",
+                thSlot: "栏位", thNormalType: "期望词条类型", thNormalVal: "期望数值下限",
+                thLock: "锁定", thRerollType: "当前词条类型", thRerollVal: "当前数值", thRerollWant: "重构期望类型及数值",
+                btnShowModal: "查看官方概率公示", btnCalcNormal: "一键精准计算",
+                btnSimReroll: "🎲 随机洗一次", btnCalcReroll: "📊 计算达成期望概率",
+                modalLink: "韩服官网声骸副词条概率公示 🔗",
+                selectLimit: "-- 请选择类型 (不限) --", selectValLimit: "-- 请选择数值 (不限) --",
+                selectEmpty: "-- 空 --", selectVal: "-- 数值 --", selectWantType: "-- 期望类型 (不限) --", selectWantVal: "-- 期望值 (不限) --",
+                alertLockEmpty: "❌ 非法重构：栏位 {idx} 已勾选“锁定”，但当前词条类型为空！请先选择当前词条类型再进行操作。",
+                alertLockAll: "不能锁定全部 5 个词条，请至少留下一个格子重新调谐重构！",
+                alertConflict: "期望冲突：被锁定的词条【{wt}】已在保留项中，重构时不可能再次洗出！",
+                alertDuplicate: "期望重复：多个重构格不能去强追同一种不重复副词条【{wt}】！",
+                alertOver格: "逻辑错误：设置的期望重构词条总数已经超过了可参与刷新洗练的空格总数！",
+                resultSuccess: "🎉 计算成功！", resultProbTitle: "🎯 满足或超越该条件的绝对概率为：",
+                resultFormNormal: "常规形式", resultFormSci: "科学计数", resultExpect: "📊 刷取期望：",
+                resultExpectDesc: "平均操作约 <strong style='color: #38bdf8;'>{denom}</strong> 次会产生一个完全符合（或超越）此要求的声骸。",
+                resultSimSuccess: "🎲 <strong>随机洗练成功！</strong> 未锁定格子的副词条已经全部无重复重构刷新。",
+                thModal1: "数值档位", thModal2: "单档概率", thModal3: "大等于总概率", labelSlot: "栏位",
+                max档: " (满档)"
+            },
+            en: {
+                title: "Wuthering Waves Echo Sub-Stat Probability Calculator",
+                tabNormal: "Sub-Stat Calculator", tabReroll: "Tuning Adjuster Calculator",
+                thSlot: "Slot", thNormalType: "Desired Sub-Stat", thNormalVal: "Minimum Value",
+                thLock: "Lock", thRerollType: "Current Sub-Stat", thRerollVal: "Current Value", thRerollWant: "Target Sub-Stat & Value",
+                btnShowModal: "Official Probability Info", btnCalcNormal: "Calculate Probability",
+                btnSimReroll: "🎲 Simulate Roll Once", btnCalcReroll: "📊 Calculate Tuning Odds",
+                modalLink: "Official Echo Drop Odds Website 🔗",
+                selectLimit: "-- Select Sub-Stat (Any) --", selectValLimit: "-- Select Value (Any) --",
+                selectEmpty: "-- Empty --", selectVal: "-- Value --", selectWantType: "-- Target Sub-Stat (Any) --", selectWantVal: "-- Target Value (Any) --",
+                alertLockEmpty: "❌ Invalid Tuning: Slot {idx} is locked but the sub-stat is empty! Please select a sub-stat type first.",
+                alertLockAll: "Cannot lock all 5 slots! Leave at least one slot to retune.",
+                alertConflict: "Conflict: Locked sub-stat 【{wt}】 cannot be rolled again in unlocked slots!",
+                alertDuplicate: "Duplicate Error: Cannot set the same target sub-stat 【{wt}】 on multiple slots!",
+                alertOver格: "Logic Error: Desired sub-stats exceed the number of unlocked slots!",
+                resultSuccess: "🎉 Calculation Successful!", resultProbTitle: "🎯 Absolute probability of meeting or exceeding conditions:",
+                resultFormNormal: "Normal Form", resultFormSci: "Scientific Notation", resultExpect: "📊 Expected Attempts:",
+                resultExpectDesc: "On average, it takes about <strong style='color: #38bdf8;'>{denom}</strong> tunes to obtain an Echo that matches or exceeds these requirements.",
+                resultSimSuccess: "🎲 <strong>Simulation Successful!</strong> Unlocked slots have been randomized without duplication.",
+                thModal1: "Stat Value", thModal2: "Base Rate", thModal3: "Cum. Rate (≥)", labelSlot: "Slot",
+                max档: " (Max)"
+            }
+        };
+
+        let currentLang = "zh";
+
+        // DOM 初始化生成
+        const normalContainer = document.getElementById('normal-slots');
         for (let i = 1; i <= 5; i++) {
-            const row = document.createElement('div');
-            row.className = 'slot-row';
-            row.innerHTML = `
-                <label>栏位 ${i}</label>
-                <select id="type-${i}" onchange="onTypeChange()">
-                    <option value="">-- 请选择类型 (不限) --</option>
-                    ${Object.keys(subStatsData).map(key => `<option value="${key}">${key}</option>`).join('')}
-                </select>
-                <div class="value-container">
-                    <span id="ge-${i}" class="ge-symbol">≥</span>
-                    <select id="value-${i}" disabled style="width: 100%;">
-                        <option value="">-- 请选择数值 (不限) --</option>
-                    </select>
-                </div>
-            `;
-            container.appendChild(row);
+            normalContainer.innerHTML += `
+                <div class="slot-row-unified">
+                    <div class="col-label label-slot-text" style="color: #38bdf8;">栏位 ${i}</div>
+                    <div class="col-normal-type">
+                        <select id="ntype-${i}" onchange="onNormalTypeChange()"></select>
+                    </div>
+                    <div class="col-normal-val">
+                        <select id="nvalue-${i}" disabled></select>
+                    </div>
+                </div>`;
         }
 
-        // 2. 初始化生成弹窗内部的表格
-        const tableContainer = document.getElementById('modal-table-container');
-        let tableHTML = `<table>
-            <thead>
-                <tr>
-                    <th>数值档位</th>
-                    <th>单档独立概率</th>
-                    <th>满足“大于等于”的总概率</th>
-                </tr>
-            </thead>
-            <tbody>`;
+        const rerollContainer = document.getElementById('reroll-slots');
+        for (let i = 1; i <= 5; i++) {
+            rerollContainer.innerHTML += `
+                <div class="slot-row-unified">
+                    <div class="col-lock"><input type="checkbox" id="lock-${i}" onchange="onLockToggle(${i})"></div>
+                    <div class="col-label label-slot-text" style="color: #facc15;">栏位 ${i}</div>
+                    <div class="col-reroll-type">
+                        <select id="rtype-${i}" onchange="onRerollCurrentTypeChange(${i})"></select>
+                    </div>
+                    <div class="col-reroll-val">
+                        <select id="rval-${i}" disabled></select>
+                    </div>
+                    <div class="col-reroll-want">
+                        <select id="wtype-${i}" onchange="onRerollWantTypeChange(${i})"></select>
+                        <select id="wval-${i}" disabled></select>
+                    </div>
+                </div>`;
+        }
 
-        Object.keys(subStatsData).forEach(statName => {
-            tableHTML += `<tr><td colspan="3" class="stat-section-title">${statName}</td></tr>`;
-            let arr = subStatsData[statName];
-            for (let i = 0; i < arr.length; i++) {
-                let sumGe = 0;
-                for (let j = i; j < arr.length; j++) sumGe += arr[j].prob;
+        // 统一处理“满档”文本翻译的包裹映射函数
+        function formatStatName(rawName) {
+            const dict = i18n[currentLang];
+            if (rawName.includes(" (满档)")) {
+                return rawName.replace(" (满档)", dict.max档);
+            }
+            return rawName;
+        }
+
+        function refreshSelectOptions(selectId, defaultText, isWantFormat=false) {
+            const selectEl = document.getElementById(selectId);
+            const savedValue = selectEl.value;
+
+            let html = `<option value="">${defaultText}</option>`;
+            Object.keys(subStatsData).forEach(key => {
+                const translatedName = statTranslations[key][currentLang];
+                html += `<option value="${key}">${isWantFormat ? '≥ ' + translatedName : translatedName}</option>`;
+            });
+            selectEl.innerHTML = html;
+            selectEl.value = savedValue;
+        }
+
+        function changeLanguage(lang) {
+            currentLang = lang;
+            const dict = i18n[lang];
+
+            document.getElementById('main-title').innerText = dict.title;
+            document.getElementById('tab-btn-normal').innerText = dict.tabNormal;
+            document.getElementById('tab-btn-reroll').innerText = dict.tabReroll;
+            document.getElementById('th-normal-slot').innerText = dict.thSlot;
+            document.getElementById('th-normal-type').innerText = dict.thNormalType;
+            document.getElementById('th-normal-val').innerText = dict.thNormalVal;
+            document.getElementById('th-reroll-lock').innerText = dict.thLock;
+            document.getElementById('th-reroll-slot').innerText = dict.thSlot;
+            document.getElementById('th-reroll-type').innerText = dict.thRerollType;
+            document.getElementById('th-reroll-val').innerText = dict.thRerollVal;
+            document.getElementById('th-reroll-want').innerText = dict.thRerollWant;
+            document.getElementById('btn-show-modal').innerText = dict.btnShowModal;
+            document.getElementById('btn-calc-normal').innerText = dict.btnCalcNormal;
+            document.getElementById('btn-sim-reroll').innerText = dict.btnSimReroll;
+            document.getElementById('btn-calc-reroll').innerText = dict.btnCalcReroll;
+            document.getElementById('modal-link-text').innerText = dict.modalLink;
+
+            document.querySelectorAll('.label-slot-text').forEach((el, idx) => {
+                el.innerHTML = `${dict.labelSlot} ${(idx % 5) + 1}`;
+            });
+
+            for(let i = 1; i <= 5; i++) {
+                refreshSelectOptions(`ntype-${i}`, dict.selectLimit);
+                refreshSelectOptions(`rtype-${i}`, dict.selectEmpty);
+                refreshSelectOptions(`wtype-${i}`, dict.selectWantType, true);
                 
-                tableHTML += `<tr>
-                    <td>≥ ${arr[i].name}</td>
-                    <td>${(arr[i].prob * 100).toFixed(4)}%</td>
-                    <td style="color:#facc15;">${(sumGe * 100).toFixed(4)}%</td>
-                </tr>`;
-            }
-        });
-        tableHTML += `</tbody></table>`;
-        tableContainer.innerHTML = tableHTML;
-
-        // 控制弹窗开关
-        function toggleModal(show) {
-            const modal = document.getElementById('probModal');
-            if (show) modal.classList.add('active');
-            else modal.classList.remove('active');
-        }
-
-        function onTypeChange() {
-            let selectedTypes = [];
-            for (let i = 1; i <= 5; i++) {
-                const val = document.getElementById(`type-${i}`).value;
-                if (val) selectedTypes.push(val);
-            }
-
-            for (let i = 1; i <= 5; i++) {
-                const typeSelect = document.getElementById(`type-${i}`);
-                const currentVal = typeSelect.value;
-
-                Array.from(typeSelect.options).forEach(option => {
-                    if (option.value === "") return;
-                    if (selectedTypes.includes(option.value) && option.value !== currentVal) {
-                        option.style.display = 'none';
-                    } else {
-                        option.style.display = 'block';
-                    }
-                });
-
-                updateValueOptions(i, currentVal);
-            }
-        }
-
-        function updateValueOptions(slotIndex, selectedType) {
-            const valueSelect = document.getElementById(`value-${slotIndex}`);
-            const geSymbol = document.getElementById(`ge-${slotIndex}`);
-            const previousIdx = valueSelect.value;
-
-            valueSelect.innerHTML = '<option value="">-- 请选择数值 (不限) --</option>';
-            
-            if (selectedType && subStatsData[selectedType]) {
-                valueSelect.disabled = false;
-                geSymbol.style.display = 'inline';
-                valueSelect.style.width = '85%';
-                
-                subStatsData[selectedType].forEach((item, idx) => {
-                    valueSelect.innerHTML += `<option value="${idx}">${item.name}</option>`;
-                });
-                if(previousIdx !== "" && previousIdx < subStatsData[selectedType].length) {
-                    valueSelect.value = previousIdx;
+                if(document.getElementById(`nvalue-${i}`).disabled) {
+                    document.getElementById(`nvalue-${i}`).innerHTML = `<option value="">${dict.selectValLimit}</option>`;
+                } else {
+                    const savedVal = document.getElementById(`nvalue-${i}`).value;
+                    const type = document.getElementById(`ntype-${i}`).value;
+                    document.getElementById(`nvalue-${i}`).innerHTML = `<option value="">${dict.selectValLimit}</option>` + subStatsData[type].map((item, idx) => `<option value="${idx}">${formatStatName(item.name)}</option>`).join('');
+                    document.getElementById(`nvalue-${i}`).value = savedVal;
                 }
-            } else {
-                valueSelect.disabled = true;
-                geSymbol.style.display = 'none';
-                valueSelect.style.width = '100%';
+                
+                if(document.getElementById(`rval-${i}`).disabled) {
+                    document.getElementById(`rval-${i}`).innerHTML = `<option value="">${dict.selectVal}</option>`;
+                } else {
+                    const savedVal = document.getElementById(`rval-${i}`).value;
+                    const type = document.getElementById(`rtype-${i}`).value;
+                    document.getElementById(`rval-${i}`).innerHTML = `<option value="">${dict.selectVal}</option>` + subStatsData[type].map((item, idx) => `<option value="${idx}">${formatStatName(item.name)}</option>`).join('');
+                    document.getElementById(`rval-${i}`).value = savedVal;
+                }
+                
+                if(document.getElementById(`wval-${i}`).disabled) {
+                    document.getElementById(`wval-${i}`).innerHTML = `<option value="">${dict.selectWantVal}</option>`;
+                } else {
+                    const savedVal = document.getElementById(`wval-${i}`).value;
+                    const type = document.getElementById(`wtype-${i}`).value;
+                    document.getElementById(`wval-${i}`).innerHTML = `<option value="">${dict.selectWantVal}</option>` + subStatsData[type].map((item, idx) => `<option value="${idx}">≥ ${formatStatName(item.name)}</option>`).join('');
+                    document.getElementById(`wval-${i}`).value = savedVal;
+                }
+            }
+
+            renderModalTable();
+
+            if(document.getElementById('normal-result').style.display === 'block') calculateNormal();
+            if(document.getElementById('reroll-result').style.display === 'block' && !document.getElementById('reroll-result').classList.contains('sim-style')) calculateRerollProbability();
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        }
+
+        function onNormalTypeChange() {
+            let selected = [];
+            for(let i=1; i<=5; i++) { let v = document.getElementById(`ntype-${i}`).value; if(v) selected.push(v); }
+            for(let i=1; i<=5; i++) {
+                let sel = document.getElementById(`ntype-${i}`); let cur = sel.value;
+                Array.from(sel.options).forEach(opt => { if(opt.value && selected.includes(opt.value) && opt.value !== cur) { opt.style.display = 'none'; } else { opt.style.display = 'block'; } });
+                updateSelectOptions(`nvalue-${i}`, cur);
             }
         }
 
-        function comb(n, m) {
-            if (m < 0 || m > n) return 0;
-            if (m === 0 || m === n) return 1;
-            let num = 1, den = 1;
-            for (let i = 1; i <= m; i++) {
-                num *= (n - i + 1);
-                den *= i;
+        function onRerollCurrentTypeChange(idx) {
+            let selected = [];
+            for(let i=1; i<=5; i++) { let v = document.getElementById(`rtype-${i}`).value; if(v) selected.push(v); }
+            for(let i=1; i<=5; i++) {
+                let sel = document.getElementById(`rtype-${i}`); let cur = sel.value;
+                Array.from(sel.options).forEach(opt => { if(opt.value && selected.includes(opt.value) && opt.value !== cur) { opt.style.display = 'none'; } else { opt.style.display = 'block'; } });
             }
-            return num;
+            let type = document.getElementById(`rtype-${idx}`).value;
+            let valSel = document.getElementById(`rval-${idx}`);
+            valSel.innerHTML = `<option value="">${i18n[currentLang].selectVal}</option>`;
+            if(type) { valSel.disabled = false; subStatsData[type].forEach((item,i) => valSel.innerHTML+=`<option value="${i}">${formatStatName(item.name)}</option>`); } else { valSel.disabled = true; }
         }
 
-        function calculateProbability() {
-            const resultDiv = document.getElementById('result');
-            resultDiv.style.display = 'none';
+        function onRerollWantTypeChange(idx) {
+            let wtypeSel = document.getElementById(`wtype-${idx}`);
+            let wvalSel = document.getElementById(`wval-${idx}`);
+            let wt = wtypeSel.value; 
+            
+            wvalSel.innerHTML = `<option value="">${i18n[currentLang].selectWantVal}</option>`;
+            if(wt) { 
+                wvalSel.disabled = false; 
+                subStatsData[wt].forEach((item,i) => wvalSel.innerHTML+=`<option value="${i}">≥ ${formatStatName(item.name)}</option>`); 
+            } else { 
+                wvalSel.disabled = true; 
+            }
+        }
 
-            let selectedTypes = [];
-            let valueMultipliers = 1;
+        function onLockToggle(idx) {
+            const isLocked = document.getElementById(`lock-${idx}`).checked;
+            document.getElementById(`rtype-${idx}`).disabled = isLocked;
+            document.getElementById(`rval-${idx}`).disabled = isLocked;
+            document.getElementById(`wtype-${idx}`).disabled = isLocked;
+            document.getElementById(`wval-${idx}`).disabled = isLocked;
+        }
 
+        function updateSelectOptions(valId, type) {
+            let vSel = document.getElementById(valId);
+            let prev = vSel.value; vSel.innerHTML = `<option value="">${i18n[currentLang].selectValLimit}</option>`;
+            if(type) {
+                vSel.disabled = false;
+                subStatsData[type].forEach((item, i) => vSel.innerHTML += `<option value="${i}">${formatStatName(item.name)}</option>`);
+                if(prev !== "" && prev < subStatsData[type].length) vSel.value = prev;
+            } else { vSel.disabled = true; }
+        }
+
+        function checkLockLegality() {
             for (let i = 1; i <= 5; i++) {
-                const type = document.getElementById(`type-${i}`).value;
-                const valueIdxStr = document.getElementById(`value-${i}`).value;
+                if (document.getElementById(`lock-${i}`).checked) {
+                    let type = document.getElementById(`rtype-${i}`).value;
+                    if (!type) {
+                        alert(i18n[currentLang].alertLockEmpty.replace("{idx}", i));
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
 
+        function calculateNormal() {
+            let selectedTypes = []; let valueMultipliers = 1;
+            for (let i = 1; i <= 5; i++) {
+                let type = document.getElementById(`ntype-${i}`).value;
+                let valIdx = document.getElementById(`nvalue-${i}`).value;
                 if (type) {
                     selectedTypes.push(type);
+                    if (valIdx !== "") {
+                        let sum = 0; for (let j = parseInt(valIdx); j < subStatsData[type].length; j++) sum += subStatsData[type][j].prob;
+                        valueMultipliers *= sum;
+                    }
+                }
+            }
+            let k = selectedTypes.length;
+            let comboProbability = 1;
+            if (k > 0) { for (let i = 0; i < k; i++) { comboProbability *= (5 - i) / (TOTAL_STATS - i); } }
+            let finalProbability = comboProbability * valueMultipliers;
+            renderFinalResult(document.getElementById('normal-result'), finalProbability);
+        }
 
-                    if (valueIdxStr !== "") {
-                        const startIdx = parseInt(valueIdxStr);
-                        let sumProb = 0;
-                        for (let j = startIdx; j < subStatsData[type].length; j++) {
-                            sumProb += subStatsData[type][j].prob;
-                        }
-                        valueMultipliers *= sumProb;
+        function simulateReroll() {
+            if (!checkLockLegality()) return;
+
+            let lockedTypes = [];
+            for(let i=1; i<=5; i++) {
+                if(document.getElementById(`lock-${i}`).checked) {
+                    lockedTypes.push(document.getElementById(`rtype-${i}`).value);
+                }
+            }
+            if(lockedTypes.length >= 5) { alert(i18n[currentLang].alertLockAll); return; }
+
+            let pool = Object.keys(subStatsData).filter(x => !lockedTypes.includes(x));
+            
+            for(let i=1; i<=5; i++) {
+                if(!document.getElementById(`lock-${i}`).checked) {
+                    if(pool.length === 0) break;
+                    let randTypeIdx = Math.floor(Math.random() * pool.length);
+                    let rolledType = pool.splice(randTypeIdx, 1)[0];
+                    
+                    let rArr = subStatsData[rolledType];
+                    let randValIdx = 0; let r = Math.random(); let cum = 0;
+                    for(let j=0; j<rArr.length; j++) { cum += rArr[j].prob; if(r <= cum) { randValIdx = j; break; } }
+
+                    document.getElementById(`rtype-${i}`).value = rolledType;
+                    onRerollCurrentTypeChange(i);
+                    document.getElementById(`rval-${i}`).value = randValIdx;
+                }
+            }
+            
+            let resDiv = document.getElementById('reroll-result');
+            resDiv.className = "result-panel sim-style";
+            resDiv.innerHTML = i18n[currentLang].resultSimSuccess;
+            resDiv.style.display = 'block';
+        }
+
+        function calculateRerollProbability() {
+            if (!checkLockLegality()) return;
+
+            let lockedTypes = []; let wantTypes = []; let wantValues = [];
+            for(let i=1; i<=5; i++) {
+                if(document.getElementById(`lock-${i}`).checked) {
+                    let t = document.getElementById(`rtype-${i}`).value;
+                    if(t) lockedTypes.push(t);
+                } else {
+                    let wt = document.getElementById(`wtype-${i}`).value;
+                    let wv = document.getElementById(`wval-${i}`).value;
+                    if(wt) {
+                        const translatedName = statTranslations[wt][currentLang];
+                        if(lockedTypes.includes(wt)) { alert(i18n[currentLang].alertConflict.replace("{wt}", translatedName)); return; }
+                        if(wantTypes.includes(wt)) { alert(i18n[currentLang].alertDuplicate.replace("{wt}", translatedName)); return; }
+                        wantTypes.push(wt); wantValues.push(wv !== "" ? parseInt(wv) : -1);
                     }
                 }
             }
 
-            const k = selectedTypes.length; 
-            const totalCombos = comb(TOTAL_STATS, 5); 
-            const validCombos = comb(TOTAL_STATS - k, 5 - k); 
-            const comboProbability = validCombos / totalCombos;
+            let m = lockedTypes.length; let n = wantTypes.length; let unLockedCount = 5 - m;
+            if(n > unLockedCount) { alert(i18n[currentLang].alertOver格); return; }
 
-            const finalProbability = comboProbability * valueMultipliers;
+            let comboProb = 1;
+            if (n > 0) { for (let i = 0; i < n; i++) { comboProb *= (unLockedCount - i) / ((TOTAL_STATS - m) - i); } }
 
-            let pctText = "";
-            if (finalProbability < 0.000001) {
-                pctText = (finalProbability * 100).toExponential(6) + "%";
-            } else {
-                pctText = (finalProbability * 100).toFixed(6).replace(/\.?0+$/, "") + "%";
+            let valMultiplier = 1;
+            for(let i=0; i<wantTypes.length; i++) {
+                let type = wantTypes[i]; let startIdx = wantValues[i];
+                if(startIdx !== -1) {
+                    let sum = 0; for(let j=startIdx; j<subStatsData[type].length; j++) sum += subStatsData[type][j].prob;
+                    valMultiplier *= sum;
+                }
             }
 
-            const fractionDenominator = BigInt(Math.round(1 / finalProbability));
-
-            resultDiv.innerHTML = `
-                <strong>🎉 计算成功！</strong><br><br>
-                🎯 满足或超越该条件的绝对概率为：
-                <div class="prob-display" style="color: #4ade80; font-size: 16px;">
-                    常规形式: ${pctText}<br>
-                    科学计数: ${finalProbability.toExponential(6)}
-                </div>
-                🔢 转换成分数形式：
-                <div class="prob-display" style="color: #facc15; font-size: 15px;">
-                    1 / ${fractionDenominator.toLocaleString()}
-                </div>
-                📊 刷取期望：<br>
-                平均强化约 <strong style="color: #38bdf8;">${fractionDenominator.toLocaleString()}</strong> 个声骸会产生一个符合（或超越）此要求的极品。
-            `;
-            resultDiv.style.display = 'block';
+            let finalProb = comboProb * valMultiplier;
+            renderFinalResult(document.getElementById('reroll-result'), finalProb);
         }
+
+        function renderFinalResult(targetDiv, prob) {
+            let dict = i18n[currentLang];
+            let pctText = prob < 0.000001 ? (prob * 100).toExponential(6) + "%" : (prob * 100).toFixed(6).replace(/\.?0+$/, "") + "%";
+            let denom = prob === 0 ? "无限" : BigInt(Math.round(1 / prob)).toLocaleString();
+            
+            targetDiv.innerHTML = `
+                <strong>${dict.resultSuccess}</strong><br><br>
+                ${dict.resultProbTitle}
+                <div class="prob-display" style="color: #4ade80; font-size: 16px;">
+                    ${dict.resultFormNormal}: ${pctText}<br>${dict.resultFormSci}: ${prob.toExponential(6)}
+                </div>
+                ${dict.resultExpect}<br>
+                ${dict.resultExpectDesc.replace("{denom}", denom)}
+            `;
+            targetDiv.style.display = 'block';
+        }
+
+        function toggleModal(show) { document.getElementById('probModal').classList[show?'add':'remove']('active'); }
+        
+        function renderModalTable() {
+            let dict = i18n[currentLang];
+            let tableHTML = `<table><thead><tr><th>${dict.thModal1}</th><th>${dict.thModal2}</th><th>${dict.thModal3}</th></tr></thead><tbody>`;
+            Object.keys(subStatsData).forEach(name => {
+                const translatedCategory = statTranslations[name][currentLang];
+                tableHTML += `<tr><td colspan="3" class="stat-section-title">${translatedCategory}</td></tr>`;
+                let arr = subStatsData[name];
+                for (let i = 0; i < arr.length; i++) {
+                    let sum = 0; for (let j = i; j < arr.length; j++) sum += arr[j].prob;
+                    tableHTML += `<tr><td>≥ ${formatStatName(arr[i].name)}</td><td>${(arr[i].prob*100).toFixed(4)}%</td><td style="color:#facc15;">${(sum*100).toFixed(4)}%</td></tr>`;
+                }
+            });
+            document.getElementById('modal-table-container').innerHTML = tableHTML + '</tbody></table>';
+        }
+
+        document.getElementById('btn-sim-reroll').onclick = simulateReroll;
+
+        changeLanguage('zh');
     </script>
 </body>
 </html>
